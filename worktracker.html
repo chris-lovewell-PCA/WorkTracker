@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --surface2: #1e1e21;
+    --border: #2a2a2e;
+    --border2: #383840;
+    --text: #e8e8ea;
+    --text2: #8a8a96;
+    --text3: #55555f;
+    --accent: #4f9eff;
+    --accent-dim: #1a2f4a;
+    --accent-border: #2a4a70;
+    --green: #3ddc84;
+    --green-dim: #0f2a1c;
+    --green-border: #1a4a30;
+    --amber: #f5a623;
+    --amber-dim: #2a1f0a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #clock {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text3);
+  }
+
+  #date-label {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .btn-export {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 14px;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-export:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 28px 60px;
+  }
+
+  /* DOING BLOCK */
+  .doing-wrap {
+    border: 1px solid var(--accent-border);
+    border-radius: 6px;
+    background: var(--accent-dim);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    transition: all 0.2s;
+  }
+  .doing-wrap.empty {
+    border-color: var(--border);
+    background: var(--surface);
+    opacity: 0.6;
+  }
+  .doing-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .doing-wrap.empty .doing-eyebrow { color: var(--text3); }
+  .doing-task-text {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .doing-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 14px;
+  }
+  .doing-empty-msg {
+    font-size: 14px;
+    color: var(--text3);
+  }
+  .doing-btns { display: flex; gap: 8px; }
+  .btn-done {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 16px;
+    border: 1px solid var(--green-border);
+    border-radius: 3px;
+    background: var(--green-dim);
+    color: var(--green);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-done:hover { background: #15401f; }
+  .btn-pause {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 16px;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-pause:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+
+  /* INPUT */
+  .input-section { margin-bottom: 24px; }
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  #main-input {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 9px 14px;
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  #main-input::placeholder { color: var(--text3); }
+  #main-input:focus { border-color: var(--accent); }
+  .btn-add-master, .btn-add-today {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 9px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-add-master {
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+  }
+  .btn-add-master:hover { border-color: var(--text2); color: var(--text); }
+  .btn-add-today {
+    border: 1px solid var(--accent-border);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .btn-add-today:hover { background: #1f3c60; }
+
+  .shortcuts {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .sc {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+  .sc kbd {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    padding: 1px 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+  }
+
+  /* TWO-COL LISTS */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .count-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1px 8px;
+  }
+
+  .panel-body { padding: 8px 0; }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 7px 14px;
+    cursor: default;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-item:hover { background: var(--surface2); }
+
+  .task-text {
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.4;
+    padding-top: 1px;
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.1s;
+    flex-shrink: 0;
+  }
+  .task-item:hover .task-actions { opacity: 1; }
+
+  .ta-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.12s;
+  }
+  .ta-btn:hover { color: var(--text); border-color: var(--text2); }
+  .ta-btn.start:hover { color: var(--green); border-color: var(--green-border); background: var(--green-dim); }
+  .ta-btn.remove:hover { color: #f05050; border-color: #5a2020; background: #2a0f0f; }
+
+  .empty-msg {
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--text3);
+    font-style: italic;
+  }
+
+  /* HISTORY */
+  .hist-panel {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .hist-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .hist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-item:hover { background: var(--surface2); }
+
+  .hist-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    min-width: 110px;
+    padding-top: 2px;
+  }
+
+  .hist-text {
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .hist-dur {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    padding-top: 2px;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .hist-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.1s;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .hist-item:hover .hist-actions { opacity: 1; }
+
+  /* EDIT ROW */
+  .hist-edit-row {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .hist-edit-row:last-child { border-bottom: none; }
+  .hist-edit-fields {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .hist-edit-fields input {
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 5px 10px;
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+  }
+  .hist-edit-fields input:focus { border-color: var(--accent); }
+  .hist-edit-task { flex: 1; min-width: 160px; }
+  .hist-edit-time { width: 90px; font-family: var(--mono) !important; font-size: 12px !important; }
+  .hist-edit-btns { display: flex; gap: 6px; }
+  .btn-save {
+    font-family: var(--mono); font-size: 11px; padding: 4px 14px;
+    border: 1px solid var(--accent-border); border-radius: 3px;
+    background: var(--accent-dim); color: var(--accent); cursor: pointer;
+    letter-spacing: 0.04em; text-transform: uppercase; transition: all 0.15s;
+  }
+  .btn-save:hover { background: #1f3c60; }
+  .btn-cancel {
+    font-family: var(--mono); font-size: 11px; padding: 4px 14px;
+    border: 1px solid var(--border2); border-radius: 3px;
+    background: transparent; color: var(--text3); cursor: pointer;
+    letter-spacing: 0.04em; text-transform: uppercase; transition: all 0.15s;
+  }
+  .btn-cancel:hover { color: var(--text2); border-color: var(--text2); }
+  .hist-edit-note {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    margin-left: 4px; align-self: center;
+  }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    display: flex;
+    gap: 24px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .summary-stat { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .summary-stat span { color: var(--text2); }
+
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+    header { padding: 12px 16px; }
+    main { padding: 16px 16px 40px; }
+    .header-right { gap: 10px; }
+    #date-label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">work<span>//</span>tracker</div>
+  <div class="header-right">
+    <span id="date-label"></span>
+    <span id="clock"></span>
+    <button class="btn-export" id="import-btn">Import CSV</button>
+    <input type="file" id="import-file" accept=".csv" style="display:none">
+    <button class="btn-export" id="export-btn">Export CSV</button>
+  </div>
+</header>
+
+<main>
+  <!-- DOING -->
+  <div class="doing-wrap empty" id="doing-wrap">
+    <div class="doing-eyebrow">Currently doing</div>
+    <div id="doing-body"><div class="doing-empty-msg">Nothing in progress — pick a task below to start</div></div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-section">
+    <div class="input-row">
+      <input id="main-input" type="text" placeholder="Type a task..." autocomplete="off" spellcheck="true" />
+      <button class="btn-add-master" id="add-master-btn">+ Master</button>
+      <button class="btn-add-today" id="add-today-btn">+ Today</button>
+    </div>
+    <div class="shortcuts">
+      <span class="sc"><kbd>Enter</kbd> add to master list</span>
+      <span class="sc"><kbd>Shift+Enter</kbd> add to today</span>
+      <span class="sc"><kbd>Esc</kbd> clear</span>
+    </div>
+  </div>
+
+  <!-- LISTS -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Master list</span>
+        <span class="count-badge" id="master-count">0</span>
+      </div>
+      <div class="panel-body" id="master-list"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Today</span>
+        <span class="count-badge" id="todo-count">0</span>
+      </div>
+      <div class="panel-body" id="todo-list"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="hist-panel">
+    <div class="hist-panel-header">
+      <span class="panel-title">History</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="ta-btn" onclick="openAddHist()">+ add row</button>
+        <span class="count-badge" id="hist-count">0</span>
+      </div>
+    </div>
+    <div id="hist-add-form" style="display:none" class="hist-edit-row">
+      <div class="hist-edit-fields">
+        <input class="hist-edit-task" id="hadd-text" type="text" placeholder="Task name" />
+        <input class="hist-edit-time" id="hadd-start" type="time" />
+        <input class="hist-edit-time" id="hadd-end" type="time" />
+        <span class="hist-edit-note">start &rarr; end</span>
+      </div>
+      <div class="hist-edit-btns">
+        <button class="btn-save" onclick="saveAddHist()">Add</button>
+        <button class="btn-cancel" onclick="closeAddHist()">Cancel</button>
+      </div>
+    </div>
+    <div id="hist-list"></div>
+    <div class="summary-bar" id="summary-bar" style="display:none">
+      <span class="summary-stat">tasks: <span id="sum-tasks">0</span></span>
+      <span class="summary-stat">time logged: <span id="sum-time">0m</span></span>
+    </div>
+  </div>
+</main>
+
+<script>
+const STORAGE_KEY = 'worktracker_v1';
+let state = { master: [], todo: [], doing: null, history: [] };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch(e) {}
+  render();
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtFull(ts) {
+  return new Date(ts).toLocaleString([], {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+}
+
+function fmtDur(ms) {
+  const m = Math.round(ms / 60000);
+  if (m < 60) return m + 'm';
+  return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+}
+
+function totalMs() {
+  return state.history.reduce((a, h) => a + h.duration, 0);
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function csvEsc(s) { return '"' + String(s).replace(/"/g,'""') + '"'; }
+
+/* ---- MUTATIONS ---- */
+
+function addToMaster(text) {
+  if (!text.trim()) return;
+  state.master.push({ id: uid(), text: text.trim() });
+  save(); render();
+}
+
+function addToTodo(text) {
+  if (!text.trim()) return;
+  state.todo.push({ id: uid(), text: text.trim() });
+  save(); render();
+}
+
+function moveToTodo(id) {
+  const i = state.master.findIndex(x => x.id === id);
+  if (i === -1) return;
+  state.todo.push(state.master.splice(i, 1)[0]);
+  save(); render();
+}
+
+function moveToMaster(id) {
+  const i = state.todo.findIndex(x => x.id === id);
+  if (i === -1) return;
+  state.master.push(state.todo.splice(i, 1)[0]);
+  save(); render();
+}
+
+function startDoing(from, id) {
+  const list = from === 'master' ? state.master : state.todo;
+  const i = list.findIndex(x => x.id === id);
+  if (i === -1) return;
+  if (state.doing) closeDoing(false);
+  const item = list.splice(i, 1)[0];
+  state.doing = { id: item.id, text: item.text, startedAt: Date.now() };
+  save(); render();
+}
+
+function closeDoing(toHistory, suffix) {
+  if (!state.doing) return;
+  const now = Date.now();
+  const text = state.doing.text + (suffix || '');
+  state.history.unshift({
+    id: uid(), text,
+    startedAt: state.doing.startedAt,
+    endedAt: now,
+    duration: now - state.doing.startedAt
+  });
+  state.doing = null;
+}
+
+function completeDoing() {
+  closeDoing(true);
+  save(); render();
+}
+
+function pauseDoing() {
+  const item = { id: state.doing.id, text: state.doing.text };
+  closeDoing(true, ' (paused)');
+  state.todo.unshift(item);
+  save(); render();
+}
+
+function removeItem(from, id) {
+  state[from] = state[from].filter(x => x.id !== id);
+  save(); render();
+}
+
+function exportCSV() {
+  if (!state.history.length) { alert('No history to export yet.'); return; }
+  const rows = [['Task', 'Started', 'Ended', 'Duration (min)', 'Duration (readable)']];
+  state.history.forEach(h => {
+    rows.push([
+      csvEsc(h.text),
+      csvEsc(fmtFull(h.startedAt)),
+      csvEsc(fmtFull(h.endedAt)),
+      Math.round(h.duration / 60000),
+      csvEsc(fmtDur(h.duration))
+    ]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0, 10);
+  a.href = url; a.download = 'work-history-' + today + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+/* ---- RENDER ---- */
+
+function renderDoing() {
+  const wrap = document.getElementById('doing-wrap');
+  const body = document.getElementById('doing-body');
+  if (state.doing) {
+    wrap.classList.remove('empty');
+    const elapsed = fmtDur(Date.now() - state.doing.startedAt);
+    body.innerHTML = `
+      <div class="doing-task-text">${esc(state.doing.text)}</div>
+      <div class="doing-meta">started ${fmtTime(state.doing.startedAt)} &middot; ${elapsed}</div>
+      <div class="doing-btns">
+        <button class="btn-done" onclick="completeDoing()">Mark done</button>
+        <button class="btn-pause" onclick="pauseDoing()">Pause &rarr; today</button>
+      </div>`;
+  } else {
+    wrap.classList.add('empty');
+    body.innerHTML = `<div class="doing-empty-msg">Nothing in progress — pick a task below to start</div>`;
+  }
+}
+
+function renderList(listId, items, fromKey) {
+  const el = document.getElementById(listId);
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-msg">Empty</div>';
+    return;
+  }
+  const otherBtn = fromKey === 'master'
+    ? `<button class="ta-btn" onclick="moveToTodo('${0}')">today</button>`
+    : `<button class="ta-btn" onclick="moveToMaster('${0}')">backlog</button>`;
+
+  el.innerHTML = items.map(it => {
+    const other = fromKey === 'master'
+      ? `<button class="ta-btn" onclick="moveToTodo('${it.id}')">today</button>`
+      : `<button class="ta-btn" onclick="moveToMaster('${it.id}')">backlog</button>`;
+    return `<div class="task-item">
+      <span class="task-text">${esc(it.text)}</span>
+      <div class="task-actions">
+        <button class="ta-btn start" onclick="startDoing('${fromKey}','${it.id}')">start</button>
+        ${other}
+        <button class="ta-btn remove" onclick="removeItem('${fromKey}','${it.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory() {
+  const el = document.getElementById('hist-list');
+  const bar = document.getElementById('summary-bar');
+  document.getElementById('hist-count').textContent = state.history.length;
+
+  if (!state.history.length) {
+    el.innerHTML = '<div class="empty-msg">Nothing completed yet — get going!</div>';
+    bar.style.display = 'none';
+    return;
+  }
+
+  el.innerHTML = state.history.map(h => `
+    <div class="hist-item" id="hrow-${h.id}">
+      <span class="hist-time">${fmtTime(h.startedAt)}&ndash;${fmtTime(h.endedAt)}</span>
+      <span class="hist-text">${esc(h.text)}</span>
+      <span class="hist-dur">${fmtDur(h.duration)}</span>
+      <div class="hist-actions">
+        <button class="ta-btn" onclick="openHistEdit('${h.id}')">edit</button>
+        <button class="ta-btn remove" onclick="deleteHist('${h.id}')">&#x2715;</button>
+      </div>
+    </div>`).join('');
+
+  bar.style.display = 'flex';
+  document.getElementById('sum-tasks').textContent = state.history.length;
+  document.getElementById('sum-time').textContent = fmtDur(totalMs());
+}
+
+function fmtTimeInput(ts) {
+  const d = new Date(ts);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function openHistEdit(id) {
+  const h = state.history.find(x => x.id === id);
+  if (!h) return;
+  const row = document.getElementById('hrow-' + id);
+  if (!row) return;
+
+  const editEl = document.createElement('div');
+  editEl.className = 'hist-edit-row';
+  editEl.id = 'hedit-' + id;
+  editEl.innerHTML = `
+    <div class="hist-edit-fields">
+      <input class="hist-edit-task" id="het-${id}" type="text" value="${esc(h.text)}" placeholder="Task name" />
+      <input class="hist-edit-time" id="hes-${id}" type="time" value="${fmtTimeInput(h.startedAt)}" />
+      <input class="hist-edit-time" id="hee-${id}" type="time" value="${fmtTimeInput(h.endedAt)}" />
+      <span class="hist-edit-note">start &rarr; end</span>
+    </div>
+    <div class="hist-edit-btns">
+      <button class="btn-save" onclick="saveHistEdit('${id}')">Save</button>
+      <button class="btn-cancel" onclick="cancelHistEdit('${id}')">Cancel</button>
+    </div>`;
+
+  row.style.display = 'none';
+  row.parentNode.insertBefore(editEl, row.nextSibling);
+  document.getElementById('het-' + id).focus();
+
+  // Save on Enter, cancel on Esc
+  editEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveHistEdit(id);
+    if (e.key === 'Escape') cancelHistEdit(id);
+  });
+}
+
+function cancelHistEdit(id) {
+  const editEl = document.getElementById('hedit-' + id);
+  const row = document.getElementById('hrow-' + id);
+  if (editEl) editEl.remove();
+  if (row) row.style.display = '';
+}
+
+function saveHistEdit(id) {
+  const h = state.history.find(x => x.id === id);
+  if (!h) return;
+  const text = (document.getElementById('het-' + id).value || '').trim();
+  const startVal = document.getElementById('hes-' + id).value;
+  const endVal = document.getElementById('hee-' + id).value;
+  if (!text) { document.getElementById('het-' + id).focus(); return; }
+
+  // Rebuild timestamps preserving the original date, only changing H:M
+  function applyTime(originalTs, timeStr) {
+    const d = new Date(originalTs);
+    const [hh, mm] = timeStr.split(':').map(Number);
+    d.setHours(hh, mm, 0, 0);
+    return d.getTime();
+  }
+
+  const startedAt = startVal ? applyTime(h.startedAt, startVal) : h.startedAt;
+  const endedAt = endVal ? applyTime(h.endedAt, endVal) : h.endedAt;
+  const duration = Math.max(0, endedAt - startedAt);
+
+  h.text = text;
+  h.startedAt = startedAt;
+  h.endedAt = endedAt;
+  h.duration = duration;
+
+  save(); renderHistory();
+}
+
+function openAddHist() {
+  const form = document.getElementById('hist-add-form');
+  form.style.display = 'block';
+  // Default times: now-30min to now
+  const now = new Date();
+  const earlier = new Date(now - 30 * 60000);
+  document.getElementById('hadd-start').value = earlier.getHours().toString().padStart(2,'0') + ':' + earlier.getMinutes().toString().padStart(2,'0');
+  document.getElementById('hadd-end').value = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('hadd-text').value = '';
+  document.getElementById('hadd-text').focus();
+}
+
+function closeAddHist() {
+  document.getElementById('hist-add-form').style.display = 'none';
+}
+
+function saveAddHist() {
+  const text = document.getElementById('hadd-text').value.trim();
+  const startVal = document.getElementById('hadd-start').value;
+  const endVal = document.getElementById('hadd-end').value;
+  if (!text) { document.getElementById('hadd-text').focus(); return; }
+
+  const today = new Date();
+  function todayAt(timeStr) {
+    const [hh, mm] = timeStr.split(':').map(Number);
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate(), hh, mm, 0, 0).getTime();
+  }
+
+  const startedAt = startVal ? todayAt(startVal) : Date.now() - 30 * 60000;
+  const endedAt = endVal ? todayAt(endVal) : Date.now();
+  const duration = Math.max(0, endedAt - startedAt);
+
+  state.history.unshift({ id: uid(), text, startedAt, endedAt, duration });
+  state.history.sort((a, b) => b.startedAt - a.startedAt);
+  save(); renderHistory();
+  closeAddHist();
+}
+
+document.getElementById('hist-add-form').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveAddHist();
+  if (e.key === 'Escape') closeAddHist();
+});
+
+function deleteHist(id) {
+  state.history = state.history.filter(x => x.id !== id);
+  save(); renderHistory();
+}
+
+function render() {
+  renderDoing();
+  renderList('master-list', state.master, 'master');
+  renderList('todo-list', state.todo, 'todo');
+  renderHistory();
+  document.getElementById('master-count').textContent = state.master.length;
+  document.getElementById('todo-count').textContent = state.todo.length;
+}
+
+/* ---- IMPORT ---- */
+
+function parseCSVRow(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      cols.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+function parseDate(str) {
+  // Try native parse first
+  const d = new Date(str);
+  if (!isNaN(d)) return d.getTime();
+  // Try locale format DD/MM/YYYY, HH:MM:SS
+  const m = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4}),?\s+(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +(m[6]||0)).getTime();
+  return null;
+}
+
+function importCSV(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) { alert('File appears empty or invalid.'); return; }
+
+    const header = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
+    const taskIdx = header.findIndex(h => h === 'task');
+    const startIdx = header.findIndex(h => h.includes('start'));
+    const endIdx = header.findIndex(h => h.includes('end'));
+    const durMinIdx = header.findIndex(h => h.includes('min'));
+
+    if (taskIdx === -1 || startIdx === -1 || endIdx === -1) {
+      alert('Could not find required columns (Task, Started, Ended).\nMake sure you\'re importing a file exported from this tracker.');
+      return;
+    }
+
+    const imported = [];
+    const skipped = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVRow(lines[i]);
+      if (cols.length < 3) continue;
+      const text = (cols[taskIdx] || '').trim();
+      const startedAt = parseDate((cols[startIdx] || '').trim());
+      const endedAt = parseDate((cols[endIdx] || '').trim());
+      if (!text || !startedAt || !endedAt) { skipped.push(i + 1); continue; }
+      const duration = durMinIdx !== -1 && cols[durMinIdx]
+        ? Math.round(+cols[durMinIdx]) * 60000
+        : endedAt - startedAt;
+      imported.push({ id: uid(), text, startedAt, endedAt, duration });
+    }
+
+    if (!imported.length) {
+      alert('No valid rows found. ' + (skipped.length ? skipped.length + ' rows skipped.' : ''));
+      return;
+    }
+
+    // Merge: deduplicate by startedAt+text, then sort newest first
+    const existing = new Set(state.history.map(h => h.startedAt + '|' + h.text));
+    const newEntries = imported.filter(h => !existing.has(h.startedAt + '|' + h.text));
+    state.history = [...state.history, ...newEntries]
+      .sort((a, b) => b.startedAt - a.startedAt);
+
+    save(); render();
+
+    const msg = newEntries.length + ' entr' + (newEntries.length === 1 ? 'y' : 'ies') + ' imported.'
+      + (imported.length - newEntries.length ? ' ' + (imported.length - newEntries.length) + ' duplicates skipped.' : '')
+      + (skipped.length ? ' ' + skipped.length + ' rows could not be parsed.' : '');
+    alert(msg);
+  };
+  reader.readAsText(file);
+}
+
+/* ---- CLOCK ---- */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('date-label').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Refresh elapsed time on doing block every minute
+setInterval(() => { if (state.doing) renderDoing(); }, 60000);
+
+/* ---- INPUT ---- */
+const inp = document.getElementById('main-input');
+
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.shiftKey) {
+    e.preventDefault();
+    addToTodo(inp.value);
+    inp.value = '';
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    addToMaster(inp.value);
+    inp.value = '';
+  } else if (e.key === 'Escape') {
+    inp.value = '';
+  }
+});
+
+document.getElementById('import-btn').onclick = () => document.getElementById('import-file').click();
+document.getElementById('import-file').onchange = e => {
+  const file = e.target.files[0];
+  if (file) { importCSV(file); e.target.value = ''; }
+};
+document.getElementById('add-master-btn').onclick = () => { addToMaster(inp.value); inp.value = ''; inp.focus(); };
+document.getElementById('add-today-btn').onclick = () => { addToTodo(inp.value); inp.value = ''; inp.focus(); };
+document.getElementById('export-btn').onclick = exportCSV;
+
+inp.focus();
+load();
+</script>
+</body>
+</html>
